@@ -14,7 +14,7 @@ The newsvendor problem models inventory decisions for perishable products where 
 1. Generate random demand scenarios based on historical data or probability distributions.
 2. Simulate profits for different order quantities.
 3. Identify the order quantity that maximizes expected profit.
-**4. A web-based Streamlit is available for viewing and manipulating. Otherwise, the one for release (on the right sidebar) is using Dash instead of Streamlit. The guide here shows how to run the Dash application locally on your computer.**__
+4. _**View a web-based application for viewing and manipulating. Otherwise, the one for release (on the right sidebar) is using Dash instead of Streamlit. The guide here shows how to run the Dash application locally on your computer.**_
 
 Prerequisites
 -------------
