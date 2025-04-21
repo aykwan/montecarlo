@@ -2,10 +2,6 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import dash
-from dash import dcc, html
-from dash.dependencies import Input, Output, State
-import dash_bootstrap_components as dbc
 from dataclasses import dataclass
 
 # -- [Include all your existing classes (NewsvendorParams, DemandDistribution, NewsvendorSimulation) here] --
@@ -241,220 +237,22 @@ def plot_simulation_paths(simulation_dataframes, max_paths=20):
     
     return fig
 
-def add_sensitivity_analysis_tab():
-    return dbc.Tab([
-        dbc.Row([
-            dbc.Col([
-                html.H4("Sensitivity Analysis", className="mt-3"),
-                html.P("See how optimal order quantity changes with different parameters"),
-                dbc.Select(
-                    id="sensitivity-param",
-                    options=[
-                        {"label": "Purchase Price", "value": "purchase_price"},
-                        {"label": "Selling Price", "value": "selling_price"},
-                        {"label": "Salvage Value", "value": "salvage_value"}
-                    ],
-                    value="purchase_price"
-                ),
-                dbc.Button("Run Analysis", id="sensitivity-button", color="success", className="mt-2")
-            ], width=12)
-        ]),
-        dbc.Spinner([
-            dcc.Graph(id="sensitivity-graph")
-        ])
-    ], label="Sensitivity Analysis")
+# Streamlit UI
+st.title("Newsvendor Monte Carlo Simulation")
 
-# Initialize the app
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-
-# Define the layout
-app.layout = dbc.Container([
-    dbc.Row([
-        dbc.Col([
-            html.H1("Newsvendor Monte Carlo Simulation", className="text-center my-4"),
-            html.P("Optimize inventory decisions using Monte Carlo simulation", className="text-center lead"),
-        ], width=12)
-    ]),
-    
-    dbc.Row([
-        dbc.Col([
-            dbc.Card([
-                dbc.CardHeader("Simulation Parameters"),
-                dbc.CardBody([
-                    dbc.Row([
-                        dbc.Col([
-                            html.Label("Purchase Price (pence)"),
-                            dcc.Input(id="purchase-price", type="number", value=30, min=1, className="form-control")
-                        ], width=6),
-                        dbc.Col([
-                            html.Label("Selling Price (pence)"),
-                            dcc.Input(id="selling-price", type="number", value=75, min=1, className="form-control")
-                        ], width=6)
-                    ], className="mb-3"),
-                    
-                    dbc.Row([
-                        dbc.Col([
-                            html.Label("Salvage Value (pence)"),
-                            dcc.Input(id="salvage-value", type="number", value=5, min=0, className="form-control")
-                        ], width=6),
-                        dbc.Col([
-                            html.Label("Batch Size"),
-                            dcc.Input(id="batch-size", type="number", value=10, min=1, className="form-control")
-                        ], width=6)
-                    ], className="mb-3"),
-                    
-                    dbc.Row([
-                        dbc.Col([
-                            html.Label("Planning Period (days)"),
-                            dcc.Input(id="planning-days", type="number", value=20, min=1, className="form-control")
-                        ], width=6),
-                        dbc.Col([
-                            html.Label("Number of Simulations"),
-                            dcc.Input(id="num-simulations", type="number", value=500, min=10, max=2000, className="form-control")
-                        ], width=6)
-                    ], className="mb-3"),
-                    
-                    dbc.Row([
-                        dbc.Col([
-                            html.Label("Min Order Quantity"),
-                            dcc.Input(id="min-order", type="number", value=10, min=0, className="form-control")
-                        ], width=4),
-                        dbc.Col([
-                            html.Label("Max Order Quantity"),
-                            dcc.Input(id="max-order", type="number", value=100, min=10, className="form-control")
-                        ], width=4),
-                        dbc.Col([
-                            html.Label("Step Size"),
-                            dcc.Input(id="step-size", type="number", value=10, min=1, className="form-control")
-                        ], width=4)
-                    ], className="mb-3"),
-                    
-                    dbc.Button("Run Simulation", id="run-button", color="primary", className="mt-3 w-100")
-                ])
-            ], className="mb-4")
-        ], width=12)
-    ]),
-    
-    dbc.Row([
-        dbc.Col([
-            dbc.Spinner([
-                dcc.Graph(id="profit-curve-graph")
-            ])
-        ], width=12, className="mb-4")
-    ]),
-    
-    dbc.Row([
-        dbc.Col([
-            dbc.Spinner([
-                dcc.Graph(id="profit-distribution-graph")
-            ])
-        ], width=6),
-        dbc.Col([
-            dbc.Spinner([
-                dcc.Graph(id="simulation-paths-graph")
-            ])
-        ], width=6)
-    ]),
-    
-    html.Div(id="simulation-results-store", style={"display": "none"})
-], fluid=True)
-
-# Define callbacks
-@app.callback(
-    [Output("profit-curve-graph", "figure"),
-     Output("profit-distribution-graph", "figure"),
-     Output("simulation-paths-graph", "figure"),
-     Output("simulation-results-store", "children")],
-    [Input("run-button", "n_clicks")],
-    [State("purchase-price", "value"),
-     State("selling-price", "value"),
-     State("salvage-value", "value"),
-     State("batch-size", "value"),
-     State("planning-days", "value"),
-     State("num-simulations", "value"),
-     State("min-order", "value"),
-     State("max-order", "value"),
-     State("step-size", "value")]
-)
-def run_simulation(n_clicks, purchase_price, selling_price, salvage_value, 
-                  batch_size, planning_days, num_simulations, min_order, max_order, step_size):
-    if n_clicks is None:
-        # Return empty figures on initial load
-        empty_fig = go.Figure()
-        empty_fig.update_layout(
-            xaxis={"visible": False},
-            yaxis={"visible": False},
-            annotations=[{
-                "text": "Run the simulation to see results",
-                "xref": "paper",
-                "yref": "paper",
-                "showarrow": False,
-                "font": {"size": 20}
-            }]
-        )
-        return empty_fig, empty_fig, empty_fig, ""
-    
-    # Create parameters
-    params = NewsvendorParams(
-        purchase_price=purchase_price,
-        selling_price=selling_price,
-        salvage_value=salvage_value,
-        batch_size=batch_size,
-        planning_days=planning_days
-    )
-    
-    # Create simulation
-    simulation = NewsvendorSimulation(params=params, seed=42)
-    
-    # Define order quantities to test
-    order_quantities = list(range(min_order, max_order + 1, step_size))
-    order_quantities = [q for q in order_quantities if q % batch_size == 0]
-    
-    # Run Monte Carlo simulation
-    monte_carlo_results = simulation.run_monte_carlo(order_quantities, num_simulations)
-    
-    # Find optimal order quantity
-    mean_profits = {q: np.mean(profits) for q, profits in monte_carlo_results.items()}
-    optimal_q = max(mean_profits, key=mean_profits.get)
-    
-    # Generate detailed simulation data for the optimal quantity
-    simulation_dataframes = []
-    for i in range(min(20, num_simulations)):  # Limit to 20 simulations for the paths plot
-        simulation.demand_dist = DemandDistribution(seed=42 + i)
-        df = simulation.run_single_simulation(optimal_q)
-        simulation_dataframes.append(df)
-    
-    # Create plots
-    profit_curve_fig = plot_expected_profit_curve(monte_carlo_results)
-    profit_dist_fig = plot_profit_distribution(monte_carlo_results)
-    paths_fig = plot_simulation_paths(simulation_dataframes)
-    
-    return profit_curve_fig, profit_dist_fig, paths_fig, "Simulation completed"
-
-# Run the app
-if __name__ == '__main__':
-    app.run(debug=True)
-
-
-
-# Streamlit App Configuration
-st.set_page_config(page_title="Newsvendor Simulation", layout="wide")
-
-# Sidebar Controls
 with st.sidebar:
     st.header("Simulation Parameters")
-    purchase_price = st.number_input("Purchase Price (pence)", value=30, min=1)
-    selling_price = st.number_input("Selling Price (pence)", value=75, min=1)
-    salvage_value = st.number_input("Salvage Value (pence)", value=5, min=0)
-    batch_size = st.number_input("Batch Size", value=10, min=1)
-    planning_days = st.number_input("Planning Period (days)", value=20, min=1)
-    num_sims = st.slider("Number of Simulations", 100, 5000, 500)
-    min_order = st.number_input("Min Order Quantity", value=10, min=0)
-    max_order = st.number_input("Max Order Quantity", value=100, min=10)
-    step_size = st.number_input("Step Size", value=10, min=1)
+    purchase_price = st.number_input("Purchase Price (pence)", value=30)
+    selling_price = st.number_input("Selling Price (pence)", value=75)
+    salvage_value = st.number_input("Salvage Value (pence)", value=5)
+    batch_size = st.number_input("Batch Size", value=10)
+    planning_days = st.number_input("Planning Period (days)", value=20)
+    num_simulations = st.number_input("Number of Simulations", value=500)
+    min_order = st.number_input("Min Order Quantity", value=10)
+    max_order = st.number_input("Max Order Quantity", value=100)
+    step_size = st.number_input("Step Size", value=10)
 
-# Run Simulation
-if st.button("Run Monte Carlo Simulation"):
+if st.button("Run Simulation"):
     params = NewsvendorParams(
         purchase_price=purchase_price,
         selling_price=selling_price,
@@ -468,18 +266,7 @@ if st.button("Run Monte Carlo Simulation"):
                        if q % batch_size == 0]
     
     with st.spinner("Running simulations..."):
-        results = simulation.run_monte_carlo(order_quantities, num_sims)
+        results = simulation.run_monte_carlo(order_quantities, num_simulations)
     
-    # Display Results
-    st.header("Simulation Results")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.plotly_chart(plot_expected_profit_curve(results), use_container_width=True)
-    with col2:
-        st.plotly_chart(plot_profit_distribution(results), use_container_width=True)
-    
-    st.plotly_chart(plot_simulation_paths(
-        [simulation.run_single_simulation(max(results, key=lambda k: np.mean(results[k]))) 
-         for _ in range(20)]
-    ), use_container_width=True)
+    st.plotly_chart(plot_expected_profit_curve(results))
+    st.plotly_chart(plot_profit_distribution(results))
