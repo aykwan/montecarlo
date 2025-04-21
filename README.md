@@ -5,12 +5,16 @@ A Monte Carlo simulation is a computational technique that uses random sampling 
 
 This project implements a Monte Carlo simulation to solve the classic newsvendor problem, a fundamental challenge in inventory management. The application helps users determine the optimal order quantity for perishable goods under uncertain demand to maximize expected profit.
 
+An online application is available for use following this link:
+https://montecarlo-mhogdtncyfruvj44xyf2sk.streamlit.app/
+
 Overview
 --------
 The newsvendor problem models inventory decisions for perishable products where demand is uncertain. This project uses Monte Carlo simulation to:
 1. Generate random demand scenarios based on historical data or probability distributions.
 2. Simulate profits for different order quantities.
 3. Identify the order quantity that maximizes expected profit.
+**4. A web-based Streamlit is available for viewing and manipulating. Otherwise, the one for release (on the right sidebar) is using Dash instead of Streamlit. The guide here shows how to run the Dash application locally on your computer.**__
 
 Prerequisites
 -------------
