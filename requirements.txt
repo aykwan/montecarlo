@@ -1,5 +1,4 @@
-dash==2.12.0
-dash-bootstrap-components==1.4.0
-plotly==5.18.0
-pandas==2.2.0
-numpy==1.24.2
+streamlit
+numpy
+pandas
+plotly
